@@ -40,17 +40,17 @@ app.get("/api/users", (req, res) => {
 
 app.post("/api/users", (req, res) => {
     const { name, email, age } = req.body;
-    if (!name || !email | !age) {
+    if (!name || !email || !age) {
         return res.status(400).send({ msg: "Missing required fields" });
     }
     const newUser = {
         id: users[users.length - 1].id + 1,
         name,
         email,
-        age:parseInt(age),
+        age: parseInt(age),
     };
     users.push(newUser);
-    return res.status(201).send({ msg: "User created",user:newUser });
+    return res.status(201).send({ msg: "User created", user: newUser });
 });
 
 app.get("/api/users/:id", (req, res) => {
@@ -60,6 +60,21 @@ app.get("/api/users/:id", (req, res) => {
     const user = users.find((user) => user.id === id);
     if (!user) res.status(404).send({ msg: "User Not Found" });
     res.send(user);
+});
+
+app.put("/api/users/:id", (req, res) => {
+    const id = parseInt(req.params.id);
+    const { body } = req;
+    if (isNaN(id))
+        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
+    const userIndex = users.findIndex((user) => user.id === id);
+    if (userIndex === -1)
+        return res.status(404).send({ msg: "User Not Found" });
+    users[userIndex] = { ...users[userIndex], ...body };
+    res.status(200).send({
+        msg: "User updated successfully",
+        user: users[userIndex],
+    });
 });
 
 app.get("/api/products", (req, res) => {
@@ -74,3 +89,7 @@ app.get("/api/products/:id", (req, res) => {
     if (!product) return res.status(404).send({ msg: "Product Not Found" });
     res.send(product);
 });
+
+// PUT
+// PATCH
+// DELETE
