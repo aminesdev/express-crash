@@ -18,7 +18,7 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-    res.status(201).send({msg: "Welcom to my app"});
+    res.status(201).send({ msg: "Welcom to my app" });
 });
 
 app.get("/api/users", (req, res) => {
@@ -27,6 +27,7 @@ app.get("/api/users", (req, res) => {
 
 app.get("/api/users/:id", (req, res) => {
     const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).send({ msg: "Bad Request. Invalid ID." });
     res.send(users.find((user) => user.id === id));
 });
 
@@ -36,5 +37,7 @@ app.get("/api/products", (req, res) => {
 
 app.get("/api/products/:id", (req, res) => {
     const id = parseInt(req.params.id);
+    if (isNaN(id))
+        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
     res.send(products.find((product) => product.id === id));
 });
