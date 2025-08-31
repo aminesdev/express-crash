@@ -1,15 +1,21 @@
 import express from "express";
 
 const app = express();
+
 const users = [
-    { id: 1, name: "Amine" },
-    { id: 2, name: "Zeki" },
-    { id: 3, name: "Abdnour" },
+    { id: 1, name: "Amine", email: "amine@example.com", age: 20 },
+    { id: 2, name: "Zeki", email: "zeki@example.com", age: 22 },
+    { id: 3, name: "Abdnour", email: "abdnour@example.com", age: 21 },
+    { id: 4, name: "Ahmed", email: "ahmed@example.com", age: 20 },
+    { id: 5, name: "Khaled", email: "khaled@example.com", age: 25 },
 ];
+
 const products = [
-    { id: 1, name: "Product1", price: 120.0 },
-    { id: 2, name: "Product2", price: 130.0 },
-    { id: 3, name: "Product3", price: 140.0 },
+    { id: 1, name: "Laptop", price: 1200.0, category: "Electronics" },
+    { id: 2, name: "Headphones", price: 150.0, category: "Electronics" },
+    { id: 3, name: "Coffee Mug", price: 20.0, category: "Kitchen" },
+    { id: 4, name: "Backpack", price: 60.0, category: "Accessories" },
+    { id: 5, name: "Smartphone", price: 900.0, category: "Electronics" },
 ];
 
 const PORT = process.env.PORT || 3000;
@@ -22,7 +28,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/users", (req, res) => {
-    res.send(users);
+    const {
+        query: { filter, value },
+    } = req;
+    // filter and value undefined
+    if (!filter || !value) return res.send(users);
+    if (filter && value)
+        return res.send(users.filter((user) => user[filter].includes(value)));
 });
 
 app.get("/api/users/:id", (req, res) => {
