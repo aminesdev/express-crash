@@ -1,6 +1,7 @@
-import express from "express";
+import express, { json } from "express";
 
 const app = express();
+app.use(express.json());
 
 const users = [
     { id: 1, name: "Amine", email: "amine@example.com", age: 20 },
@@ -31,10 +32,25 @@ app.get("/api/users", (req, res) => {
     const {
         query: { filter, value },
     } = req;
-    // filter and value undefined
-    if (!filter || !value) return res.send(users);
+
     if (filter && value)
         return res.send(users.filter((user) => user[filter].includes(value)));
+    res.send(users);
+});
+
+app.post("/api/users", (req, res) => {
+    const { name, email, age } = req.body;
+    if (!name || !email | !age) {
+        return res.status(400).send({ msg: "Missing required fields" });
+    }
+    const newUser = {
+        id: users[users.length - 1].id + 1,
+        name,
+        email,
+        age:parseInt(age),
+    };
+    users.push(newUser);
+    return res.status(201).send({ msg: "User created",user:newUser });
 });
 
 app.get("/api/users/:id", (req, res) => {
@@ -58,5 +74,3 @@ app.get("/api/products/:id", (req, res) => {
     if (!product) return res.status(404).send({ msg: "Product Not Found" });
     res.send(product);
 });
-
-// lcoalhost:3000/products?key=value&key2=value2
