@@ -27,8 +27,11 @@ app.get("/api/users", (req, res) => {
 
 app.get("/api/users/:id", (req, res) => {
     const id = parseInt(req.params.id);
-    if (isNaN(id)) return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-    res.send(users.find((user) => user.id === id));
+    if (isNaN(id))
+        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
+    const user = users.find((user) => user.id === id);
+    if (!user) res.status(404).send({ msg: "User Not Found" });
+    res.send(user);
 });
 
 app.get("/api/products", (req, res) => {
@@ -39,5 +42,9 @@ app.get("/api/products/:id", (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id))
         return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-    res.send(products.find((product) => product.id === id));
+    const product = products.find((product) => product.id === id);
+    if (!product) return res.status(404).send({ msg: "Product Not Found" });
+    res.send(product);
 });
+
+// lcoalhost:3000/products?key=value&key2=value2
