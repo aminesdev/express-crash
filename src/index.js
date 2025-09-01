@@ -1,4 +1,4 @@
-import express, { json } from "express";
+import express from "express";
 
 const app = express();
 app.use(express.json());
@@ -19,22 +19,41 @@ const products = [
     { id: 5, name: "Smartphone", price: 900.0, category: "Electronics" },
 ];
 
+const logginMiddleware = (req, res, next) => {
+    console.log(`${req.method} - ${req.url}`);
+    next();
+};
+
+const resolveIndexByUserId = (req, res, next) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id))
+        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
+
+    const userIndex = users.findIndex((user) => user.id === id);
+    if (userIndex === -1)
+        return res.status(404).send({ msg: "User Not Found" });
+
+    req.findUserIndex = userIndex;
+    next();
+};
+
+app.use(logginMiddleware);
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Running on Port ${PORT}`);
 });
 
 app.get("/", (req, res) => {
-    res.status(200).send({ msg: "Welcom to my app" });
+    res.status(200).send({ msg: "Welcome to my app" });
 });
 
 app.get("/api/users", (req, res) => {
     const {
         query: { filter, value },
     } = req;
-
     if (filter && value)
-        return res.send(users.filter((user) => user[filter].includes(value)));
+        return res.send(users.filter((user) => user[filter]?.includes(value)));
     res.send(users);
 });
 
@@ -53,54 +72,33 @@ app.post("/api/users", (req, res) => {
     return res.status(201).send({ msg: "User created", user: newUser });
 });
 
-app.get("/api/users/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    if (isNaN(id))
-        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-    const user = users.find((user) => user.id === id);
-    if (!user) res.status(404).send({ msg: "User Not Found" });
-    res.send(user);
+app.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
+    res.send(users[req.findUserIndex]);
 });
 
-app.put("/api/users/:id", (req, res) => {
-    const id = parseInt(req.params.id);
+app.put("/api/users/:id", resolveIndexByUserId, (req, res) => {
     const { body } = req;
-    if (isNaN(id))
-        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-    const userIndex = users.findIndex((user) => user.id === id);
-    if (userIndex === -1)
-        return res.status(404).send({ msg: "User Not Found" });
-    users[userIndex] = { id, ...body };
+    users[req.findUserIndex] = { id: users[req.findUserIndex].id, ...body };
     res.status(200).send({
         msg: "User updated successfully",
-        user: users[userIndex],
+        user: users[req.findUserIndex],
     });
 });
 
-app.patch("/api/users/:id", (req, res) => {
-    const id = parseInt(req.params.id);
+app.patch("/api/users/:id", resolveIndexByUserId, (req, res) => {
     const { body } = req;
-    if (isNaN(id))
-        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-    const userIndex = users.findIndex((user) => user.id === id);
-    if (userIndex === -1)
-        return res.status(404).send({ msg: "User Not Found" });
-    users[userIndex] = { ...users[userIndex], ...body };
+    users[req.findUserIndex] = { ...users[req.findUserIndex], ...body };
     res.status(200).send({
         msg: "User updated successfully",
-        user: users[userIndex],
+        user: users[req.findUserIndex],
     });
 });
 
-app.delete("/api/users/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    if (isNaN(id))
-        return res.status(400).send({ msg: "Bad Request, Invalid ID." });
-    const deleteIndex = users.findIndex((user) => user.id === id);
-    if (deleteIndex === -1)
-        return res.status(404).send({ msg: "User Not Found" });
-    users.splice(deleteIndex, 1);
-    res.status(200).send({ msg: `User with ID:${id} deleted successfully` });
+app.delete("/api/users/:id", resolveIndexByUserId, (req, res) => {
+    const deleted = users.splice(req.findUserIndex, 1);
+    res.status(200).send({
+        msg: `User with ID:${deleted[0].id} deleted successfully`,
+    });
 });
 
 app.get("/api/products", (req, res) => {
