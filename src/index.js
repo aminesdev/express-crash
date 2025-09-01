@@ -70,6 +70,21 @@ app.put("/api/users/:id", (req, res) => {
     const userIndex = users.findIndex((user) => user.id === id);
     if (userIndex === -1)
         return res.status(404).send({ msg: "User Not Found" });
+    users[userIndex] = { id, ...body };
+    res.status(200).send({
+        msg: "User updated successfully",
+        user: users[userIndex],
+    });
+});
+
+app.patch("/api/users/:id", (req, res) => {
+    const id = parseInt(req.params.id);
+    const { body } = req;
+    if (isNaN(id))
+        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
+    const userIndex = users.findIndex((user) => user.id === id);
+    if (userIndex === -1)
+        return res.status(404).send({ msg: "User Not Found" });
     users[userIndex] = { ...users[userIndex], ...body };
     res.status(200).send({
         msg: "User updated successfully",
@@ -89,7 +104,3 @@ app.get("/api/products/:id", (req, res) => {
     if (!product) return res.status(404).send({ msg: "Product Not Found" });
     res.send(product);
 });
-
-// PUT
-// PATCH
-// DELETE
