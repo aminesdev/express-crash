@@ -25,7 +25,7 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-    res.status(201).send({ msg: "Welcom to my app" });
+    res.status(200).send({ msg: "Welcom to my app" });
 });
 
 app.get("/api/users", (req, res) => {
@@ -90,6 +90,17 @@ app.patch("/api/users/:id", (req, res) => {
         msg: "User updated successfully",
         user: users[userIndex],
     });
+});
+
+app.delete("/api/users/:id", (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id))
+        return res.status(400).send({ msg: "Bad Request, Invalid ID." });
+    const deleteIndex = users.findIndex((user) => user.id === id);
+    if (deleteIndex === -1)
+        return res.status(404).send({ msg: "User Not Found" });
+    users.splice(deleteIndex, 1);
+    res.status(200).send({ msg: `User with ID:${id} deleted successfully` });
 });
 
 app.get("/api/products", (req, res) => {
