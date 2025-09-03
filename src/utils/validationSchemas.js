@@ -1,4 +1,5 @@
-import { body ,validationResult} from "express-validator";
+import { body, validationResult } from "express-validator";
+
 export const createUserValidation = [
     body("name")
         .notEmpty()
@@ -31,6 +32,47 @@ export const updateUserValidation = [
         .optional()
         .isInt({ min: 18, max: 100 })
         .withMessage("Age must be between 18 and 100"),
+];
+
+export const createProductValidation = [
+    body("name")
+        .notEmpty()
+        .withMessage("Product name is required")
+        .isString()
+        .withMessage("Product name must be a string")
+        .isLength({ min: 2, max: 64 })
+        .withMessage("Product name length must be between 2 and 64 chars"),
+    body("price")
+        .notEmpty()
+        .withMessage("Price is required")
+        .isFloat({ min: 0.01 })
+        .withMessage("Price must be a positive number"),
+    body("category")
+        .notEmpty()
+        .withMessage("Category is required")
+        .isString()
+        .withMessage("Category must be a string")
+        .isLength({ min: 3, max: 32 })
+        .withMessage("Category length must be between 3 and 32 chars"),
+];
+
+export const updateProductValidation = [
+    body("name")
+        .optional()
+        .isString()
+        .withMessage("Product name must be a string")
+        .isLength({ min: 2, max: 64 })
+        .withMessage("Product name length must be between 2 and 64 chars"),
+    body("price")
+        .optional()
+        .isFloat({ min: 0.01 })
+        .withMessage("Price must be a positive number"),
+    body("category")
+        .optional()
+        .isString()
+        .withMessage("Category must be a string")
+        .isLength({ min: 3, max: 32 })
+        .withMessage("Category length must be between 3 and 32 chars"),
 ];
 
 export const validate = (req, res, next) => {
