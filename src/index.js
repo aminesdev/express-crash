@@ -1,4 +1,6 @@
 import express from "express";
+import {query, validationResult, body} from "express-validator";
+import {createUserValidation,updateUserValidation} from "./utils/validationSchemas.js"
 
 const app = express();
 app.use(express.json());
@@ -24,6 +26,17 @@ const logginMiddleware = (req, res, next) => {
     next();
 };
 
+
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+};
+
+app.use(logginMiddleware);
+
 const resolveIndexByUserId = (req, res, next) => {
     const id = parseInt(req.params.id);
     if (isNaN(id))
@@ -37,9 +50,7 @@ const resolveIndexByUserId = (req, res, next) => {
     next();
 };
 
-app.use(logginMiddleware);
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => {
     console.log(`Running on Port ${PORT}`);
 });
@@ -53,15 +64,14 @@ app.get("/api/users", (req, res) => {
         query: { filter, value },
     } = req;
     if (filter && value)
-        return res.send(users.filter((user) => user[filter]?.includes(value)));
+        return res.send(
+            users.filter((user) => user[filter]?.toString().includes(value))
+        );
     res.send(users);
 });
 
-app.post("/api/users", (req, res) => {
+app.post("/api/users", createUserValidation, validate, (req, res) => {
     const { name, email, age } = req.body;
-    if (!name || !email || !age) {
-        return res.status(400).send({ msg: "Missing required fields" });
-    }
     const newUser = {
         id: users[users.length - 1].id + 1,
         name,
@@ -76,16 +86,22 @@ app.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
     res.send(users[req.findUserIndex]);
 });
 
-app.put("/api/users/:id", resolveIndexByUserId, (req, res) => {
-    const { body } = req;
-    users[req.findUserIndex] = { id: users[req.findUserIndex].id, ...body };
-    res.status(200).send({
-        msg: "User updated successfully",
-        user: users[req.findUserIndex],
-    });
-});
+app.put(
+    "/api/users/:id",
+    updateUserValidation,
+    validate,
+    resolveIndexByUserId,
+    (req, res) => {
+        const { body } = req;
+        users[req.findUserIndex] = { id: users[req.findUserIndex].id, ...body };
+        res.status(200).send({
+            msg: "User updated successfully",
+            user: users[req.findUserIndex],
+        });
+    }
+);
 
-app.patch("/api/users/:id", resolveIndexByUserId, (req, res) => {
+app.patch("/api/users/:id", resolveIndexByUserId,updateUserValidation,validate, (req, res) => {
     const { body } = req;
     users[req.findUserIndex] = { ...users[req.findUserIndex], ...body };
     res.status(200).send({
