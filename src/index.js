@@ -1,6 +1,5 @@
 import express from "express";
-import {query, validationResult, body} from "express-validator";
-import {createUserValidation,updateUserValidation} from "./utils/validationSchemas.js"
+import {createUserValidation,updateUserValidation,validate} from "./utils/validationSchemas.js"
 
 const app = express();
 app.use(express.json());
@@ -23,15 +22,6 @@ const products = [
 
 const logginMiddleware = (req, res, next) => {
     console.log(`${req.method} - ${req.url}`);
-    next();
-};
-
-
-const validate = (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
     next();
 };
 

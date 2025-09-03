@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body ,validationResult} from "express-validator";
 export const createUserValidation = [
     body("name")
         .notEmpty()
@@ -32,3 +32,11 @@ export const updateUserValidation = [
         .isInt({ min: 18, max: 100 })
         .withMessage("Age must be between 18 and 100"),
 ];
+
+export const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+};
