@@ -21,6 +21,8 @@ const resolveIndexByUserId = (req, res, next) => {
 const router = Router();
 
 router.get("/api/users", (req, res) => {
+    console.log(`session: ${req.session}`);
+    console.log(`session: ${req.session.id}`);
     const {
         query: { filter, value },
     } = req;
