@@ -12,7 +12,7 @@ router.get("/api/products", (req, res) => {
     console.log(req.headers.cookie);
     console.log(req.cookies);
     console.log(req.signedCookies);
-    if (req.cookies.hello && req.cookies.hello === "world") {
+    if (req.signedCookies.hello && req.signedCookies.hello === "world") {
         return res.send(products);
     }
     res.status(403).send({ msg: "Sorry. You need the correct cookie" });
