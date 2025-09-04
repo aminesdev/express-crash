@@ -9,7 +9,13 @@ import {
 const router = Router();
 
 router.get("/api/products", (req, res) => {
-    res.send(products);
+    console.log(req.headers.cookie);
+    console.log(req.cookies);
+    console.log(req.signedCookies);
+    if (req.cookies.hello && req.cookies.hello === "world") {
+        return res.send(products);
+    }
+    res.status(403).send({ msg: "Sorry. You need the correct cookie" });
 });
 
 router.get("/api/products/:id", (req, res) => {
