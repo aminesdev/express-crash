@@ -30,4 +30,12 @@ router.get("/api/auth/status", (req, res) => {
         : res.sendStatus(401);
 });
 
+router.post("/api/auth/logout", (req, res) => {
+    if (!req.user) return res.sendStatus(401);
+    req.logout((err) => {
+        if (err) return res.sendStatus(400);
+        res.sendStatus(200);
+    });
+});
+
 export default router;
