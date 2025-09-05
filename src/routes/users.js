@@ -22,7 +22,16 @@ const router = Router();
 
 router.get("/api/users", (req, res) => {
     console.log(`session: ${req.session}`);
-    console.log(`session: ${req.session.id}`);
+    console.log(`sessionID: ${req.session.id}`);
+    console.log(
+        `session: ${req.sessionStore.get(req.session.id, (err, sessionData) => {
+            if (err) {
+                console.log(err);
+                throw err;
+            }
+            console.log(sessionData);
+        })}`
+    );
     const {
         query: { filter, value },
     } = req;
