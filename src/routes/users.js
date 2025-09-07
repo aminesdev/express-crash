@@ -1,98 +1,88 @@
 import { Router } from "express";
-import { users } from "../utils/constants.js";
+import { User } from "../models/User.js";
 import {
     createUserValidation,
     updateUserValidation,
     validate,
 } from "../utils/validationSchemas.js";
-const resolveIndexByUserId = (req, res, next) => {
-    const id = parseInt(req.params.id);
-    if (isNaN(id))
-        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-
-    const userIndex = users.findIndex((user) => user.id === id);
-    if (userIndex === -1)
-        return res.status(404).send({ msg: "User Not Found" });
-
-    req.findUserIndex = userIndex;
-    next();
-};
 
 const router = Router();
 
-router.get("/api/users", (req, res) => {
-    console.log(`session: ${req.session}`);
-    console.log(`sessionID: ${req.session.id}`);
-    console.log(
-        `session: ${req.sessionStore.get(req.session.id, (err, sessionData) => {
-            if (err) {
-                console.log(err);
-                throw err;
-            }
-            console.log(sessionData);
-        })}`
-    );
-    const {
-        query: { filter, value },
-    } = req;
-    if (filter && value)
-        return res.send(
-            users.filter((user) => user[filter]?.toString().includes(value))
-        );
-    res.send(users);
+router.get("/api/users", async (req, res) => {
+    const { filter, value } = req.query;
+    try {
+        let users;
+        if (filter && value) {
+            users = await User.find({
+                [filter]: { $regex: value, $options: "i" },
+            });
+        } else {
+            users = await User.find();
+        }
+        res.status(200).json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-router.post("/api/users", createUserValidation, validate, (req, res) => {
-    const { name, email, age } = req.body;
-    const newUser = {
-        id: users[users.length - 1].id + 1,
-        name,
-        email,
-        age: parseInt(age),
-    };
-    users.push(newUser);
-    return res.status(201).send({ msg: "User created", user: newUser });
+router.post("/api/users", createUserValidation, validate, async (req, res) => {
+    const { name, email, age, password } = req.body;
+    try {
+        const newUser = new User({ name, email, age, password });
+        const savedUser = await newUser.save();
+        res.status(201).send({ msg: "User created", user: savedUser });
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
 });
 
-router.get("/api/users/:id", resolveIndexByUserId, (req, res) => {
-    res.send(users[req.findUserIndex]);
+router.get("/api/users/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ msg: "User Not Found" });
+        return res.status(200).json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 router.put(
     "/api/users/:id",
     updateUserValidation,
     validate,
-    resolveIndexByUserId,
-    (req, res) => {
-        const { body } = req;
-        users[req.findUserIndex] = { id: users[req.findUserIndex].id, ...body };
-        res.status(200).send({
-            msg: "User updated successfully",
-            user: users[req.findUserIndex],
-        });
+    async (req, res) => {
+        try {
+            const updatedUser = await User.findByIdAndUpdate(
+                req.params.id,
+                req.body,
+                { new: true, runValidators: true }
+            );
+            if (!updatedUser)
+                return res.status(404).json({ msg: "User Not Found" });
+            res.status(200).json({
+                msg: "User updated successfully",
+                user: updatedUser,
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
     }
 );
 
-router.patch(
-    "/api/users/:id",
-    resolveIndexByUserId,
-    updateUserValidation,
-    validate,
-    (req, res) => {
-        const { body } = req;
-        users[req.findUserIndex] = { ...users[req.findUserIndex], ...body };
-        res.status(200).send({
-            msg: "User updated successfully",
-            user: users[req.findUserIndex],
-        });
-    }
-);
+router.delete("/api/users/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedUser = await User.findByIdAndDelete(id);
+        if (!deletedUser)
+            return res.status(404).json({ msg: "User Not Found" });
 
-router.delete("/api/users/:id", resolveIndexByUserId, (req, res) => {
-    const deleted = users.splice(req.findUserIndex, 1);
-    res.status(200).send({
-        msg: `User with ID:${deleted[0].id} deleted successfully`,
-    });
+        res.status(200).send({
+            msg: `User with ID:${deletedUser._id} deleted successfully`,
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
 });
 
 export default router;

@@ -1,4 +1,5 @@
-import { Router } from "express";
+import {Router} from "express";
+import "../config/passport.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";

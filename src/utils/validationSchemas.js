@@ -18,6 +18,11 @@ export const createUserValidation = [
         .withMessage("Age is required")
         .isInt({ min: 18, max: 100 })
         .withMessage("Age must be between 18 and 100"),
+    body("password")
+        .notEmpty()
+        .withMessage("Password is required")
+        .isLength({ min: 6, max: 100 })
+        .withMessage("Password must be between 6 and 100 characters"),
 ];
 
 export const updateUserValidation = [

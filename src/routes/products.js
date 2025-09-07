@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { products } from "../utils/constants.js";
+import { Product } from "../models/Product.js";
 import {
     createProductValidation,
     updateProductValidation,
@@ -8,97 +8,82 @@ import {
 
 const router = Router();
 
-router.get("/api/products", (req, res) => {
-    console.log(req.headers.cookie);
-    console.log(req.cookies);
-    console.log(req.signedCookies);
-    if (req.signedCookies.hello && req.signedCookies.hello === "world") {
-        return res.send(products);
+router.get("/api/products", async (req, res) => {
+    try {
+        const products = await Product.find();
+        res.status(200).json(products);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    res.status(403).send({ msg: "Sorry. You need the correct cookie" });
 });
 
-router.get("/api/products/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    if (isNaN(id))
-        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-
-    const product = products.find((p) => p.id === id);
-    if (!product) return res.status(404).send({ msg: "Product Not Found" });
-
-    res.send(product);
+router.get("/api/products/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const product = await Product.findById(id);
+        if (!product) return res.status(404).json({ msg: "Product Not Found" });
+        res.status(200).json(product);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-router.post("/api/products", createProductValidation, validate, (req, res) => {
-    const { name, price, category } = req.body;
-
-    const newProduct = {
-        id: products[products.length - 1].id + 1,
-        name,
-        price: parseFloat(price),
-        category,
-    };
-
-    products.push(newProduct);
-    res.status(201).send({ msg: "Product created", product: newProduct });
-});
+router.post(
+    "/api/products",
+    createProductValidation,
+    validate,
+    async (req, res) => {
+        try {
+            const { name, price, category } = req.body;
+            const newProduct = new Product({ name, price, category });
+            const savedProduct = await newProduct.save();
+            res.status(201).json({
+                msg: "Product created",
+                product: savedProduct,
+            });
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
+    }
+);
 
 router.put(
     "/api/products/:id",
     updateProductValidation,
     validate,
-    (req, res) => {
-        const id = parseInt(req.params.id);
-        if (isNaN(id))
-            return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-
-        const productIndex = products.findIndex((p) => p.id === id);
-        if (productIndex === -1)
-            return res.status(404).send({ msg: "Product Not Found" });
-
-        const { name, price, category } = req.body;
-
-        products[productIndex] = {
-            id,
-            name,
-            price: parseFloat(price),
-            category,
-        };
-
-        res.send({ msg: "Product updated", product: products[productIndex] });
+    async (req, res) => {
+        try {
+            const { id } = req.params;
+            const updates = req.body;
+            const updatedProduct = await Product.findByIdAndUpdate(
+                id,
+                updates,
+                { new: true, runValidators: true }
+            );
+            if (!updatedProduct)
+                return res.status(404).json({ msg: "Product Not Found" });
+            res.status(200).json({
+                msg: "Product updated",
+                product: updatedProduct,
+            });
+        } catch (err) {
+            res.status(400).json({ error: err.message });
+        }
     }
 );
 
-router.patch(
-    "/api/products/:id",
-    updateProductValidation,
-    validate,
-    (req, res) => {
-        const id = parseInt(req.params.id);
-        if (isNaN(id))
-            return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-
-        const productIndex = products.findIndex((p) => p.id === id);
-        if (productIndex === -1)
-            return res.status(404).send({ msg: "Product Not Found" });
-
-        products[productIndex] = { ...products[productIndex], ...req.body };
-
-        res.send({ msg: "Product updated", product: products[productIndex] });
+router.delete("/api/products/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedProduct = await Product.findByIdAndDelete(id);
+        if (!deletedProduct)
+            return res.status(404).json({ msg: "Product Not Found" });
+        res.status(200).json({
+            msg: `Product with ID ${id} deleted successfully`,
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-);
-
-router.delete("/api/products/:id", (req, res) => {
-    const id = parseInt(req.params.id);
-    if (isNaN(id))
-        return res.status(400).send({ msg: "Bad Request. Invalid ID." });
-
-    const productIndex = products.findIndex((p) => p.id === id);
-    if (productIndex === -1)
-        return res.status(404).send({ msg: "Product Not Found" });
-
-    const deleted = products.splice(productIndex, 1);
-    res.send({ msg: `Product with ID:${deleted[0].id} deleted successfully` });
 });
 
 export default router;
