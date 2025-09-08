@@ -5,6 +5,7 @@ import {
     updateUserValidation,
     validate,
 } from "../utils/validationSchemas.js";
+import { hashPassword } from "../utils/helpers.js";
 
 const router = Router();
 
@@ -27,8 +28,14 @@ router.get("/api/users", async (req, res) => {
 
 router.post("/api/users", createUserValidation, validate, async (req, res) => {
     const { name, email, age, password } = req.body;
+    const hashedPassword = await hashPassword(password);
     try {
-        const newUser = new User({ name, email, age, password });
+        const newUser = new User({
+            name,
+            email,
+            age,
+            password: hashedPassword,
+        });
         const savedUser = await newUser.save();
         res.status(201).send({ msg: "User created", user: savedUser });
     } catch (err) {

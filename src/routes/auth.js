@@ -3,6 +3,9 @@ import "../config/passport.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";
+import MongoStore from "connect-mongo";
+import mongoose from "mongoose";
+
 
 const router = Router();
 
@@ -15,6 +18,10 @@ router.use(
         cookie: {
             maxAge: 1000 * 60 * 60 * 24,
         },
+        store: MongoStore.create({
+            mongoUrl: "mongodb://localhost/express_crash",
+            collectionName:"sessions"
+        })
     })
 );
 
