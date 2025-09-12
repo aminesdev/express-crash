@@ -7,8 +7,8 @@ const UserSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true,
-        unique: true,
+        required: false,
+        sparse: true, 
     },
     age: {
         type: Number,
@@ -16,8 +16,15 @@ const UserSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: false,
     },
+    discordId: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
+    avatar: String,
 });
+
 
 export const User = mongoose.model("User", UserSchema);

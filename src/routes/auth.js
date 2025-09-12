@@ -1,11 +1,10 @@
-import {Router} from "express";
-import "../config/passport.js";
+import { Router } from "express";
+// import "../config/local-strategy.js";
+import "../config/discord-strategy.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "passport";
 import MongoStore from "connect-mongo";
-import mongoose from "mongoose";
-
 
 const router = Router();
 
@@ -20,8 +19,8 @@ router.use(
         },
         store: MongoStore.create({
             mongoUrl: "mongodb://localhost/express_crash",
-            collectionName:"sessions"
-        })
+            collectionName: "sessions",
+        }),
     })
 );
 
@@ -45,5 +44,14 @@ router.post("/api/auth/logout", (req, res) => {
         res.sendStatus(200);
     });
 });
+
+router.get("/api/auth/discord", passport.authenticate("discord"));
+router.get(
+    "/api/auth/discord/redirect",
+    passport.authenticate("discord"),
+    (req, res) => {
+        res.sendStatus(200);
+    }
+);
 
 export default router;
